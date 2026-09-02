@@ -109,8 +109,12 @@ class OpenCVDetector:
 
         if not (
             self.config["min_area_px"] <= area <= self.config["max_area_px"]
-            and self.config["min_width_px"] <= width <= self.config["max_width_px"]
-            and self.config["min_height_px"] <= height <= self.config["max_height_px"]
+            and self.config.get("min_width_px", self.config["min_size_px"])
+            <= width
+            <= self.config.get("max_width_px", self.config["max_size_px"])
+            and self.config.get("min_height_px", self.config["min_size_px"])
+            <= height
+            <= self.config.get("max_height_px", self.config["max_size_px"])
             and self.config["min_aspect_ratio"]
             <= aspect_ratio
             <= self.config["max_aspect_ratio"]
