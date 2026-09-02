@@ -22,6 +22,7 @@ class YoloOnnxDetector:
         self,
         model_path: Path,
         confidence_threshold: float,
+        class_ids: set[int] | None = None,
         session: Any | None = None,
     ) -> None:
         if session is None and not model_path.is_file():
@@ -35,6 +36,7 @@ class YoloOnnxDetector:
         )
         self.input_name = self.session.get_inputs()[0].name
         self.confidence_threshold = confidence_threshold
+        self.class_ids = class_ids
 
     def detect(self, sample: ImageSample) -> list[Detection]:
         rgb = cv2.cvtColor(sample.image, cv2.COLOR_BGR2RGB)
@@ -56,7 +58,10 @@ class YoloOnnxDetector:
 
         detections: list[Detection] = []
         for x1, y1, x2, y2, confidence, class_id in output[0]:
+            decoded_class_id = int(class_id)
             if confidence < self.confidence_threshold:
+                continue
+            if self.class_ids is not None and decoded_class_id not in self.class_ids:
                 continue
             box = (
                 int(np.clip(round(float(x1)), 0, image_width)),
@@ -65,5 +70,5 @@ class YoloOnnxDetector:
                 int(np.clip(round(float(y2)), 0, image_height)),
             )
             if box[2] > box[0] and box[3] > box[1]:
-                detections.append(Detection(box, float(confidence), int(class_id)))
+                detections.append(Detection(box, float(confidence), decoded_class_id))
         return detections
