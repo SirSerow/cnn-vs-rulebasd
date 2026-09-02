@@ -1,6 +1,6 @@
 # CNN vs Rule-Based Conveyor Image Counter
 
-This repository plans a Raspberry Pi 4 experiment comparing two approaches on
+This repository implements a Raspberry Pi 4 experiment comparing two approaches on
 annotated images from a real conveyor:
 
 1. YOLO26n inference through ONNX Runtime on the CPU.
@@ -10,6 +10,10 @@ Both modes receive the same normalized images and return the same bounding-box
 contract. Their boxes and per-image object counts are evaluated against the
 provided annotations. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the complete
 experimental protocol.
+
+The first working version is implemented. It loads Edge Impulse annotations,
+runs either backend, calculates shared detection/count metrics, writes annotated
+images, and creates an MP4 review sequence from the still-image test split.
 
 ## Dataset
 
@@ -106,14 +110,76 @@ capture sequences, so the published split may contain near-neighbor leakage.
 Report this limitation and use a larger, capture-grouped held-out set before
 publishing definitive accuracy conclusions.
 
-## Planned command-line interface
+## Setup
+
+Python 3.11 or newer is required.
 
 ```bash
-python app.py --mode opencv --dataset datasets/cubes-on-conveyor-belt --split testing
-python app.py --mode yolo --dataset datasets/cubes-on-conveyor-belt --split testing
-python app.py --mode opencv --dataset datasets/cubes-on-conveyor-belt --split testing --benchmark --no-render
-python app.py --mode yolo --dataset datasets/cubes-on-conveyor-belt --split testing --output results/yolo-testing
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+.venv/bin/python scripts/download_dataset.py
 ```
 
-> The inference application is not implemented yet. The repository currently
-> contains the project plan and reproducible dataset-download preparation.
+On Windows, replace `.venv/bin/` with `.venv\\Scripts\\`.
+
+## Run the OpenCV baseline
+
+```bash
+.venv/bin/python app.py \
+  --mode opencv \
+  --dataset datasets/cubes-on-conveyor-belt \
+  --split testing
+```
+
+Outputs are written to `results/opencv-testing/`:
+
+- `summary.json` — aggregate detection, count, and timing metrics;
+- `results.csv` — per-image counts and detector latency;
+- `images/` — annotated test images;
+- `opencv-testing-review.mp4` — two seconds per annotated image.
+
+The MP4 is only a convenient visual review of still-image results. Its playback
+rate is not a video-inference FPS measurement.
+
+## Train and run YOLO26n
+
+Training is done on a development machine, never on the Raspberry Pi. The
+script converts only the source `training` split to YOLO format, makes a
+deterministic 44/11 train/validation split, fine-tunes YOLO26n, and exports the
+default end-to-end ONNX output at 640×480.
+
+```bash
+.venv/bin/pip install -e ".[train]"
+.venv/bin/python scripts/train_yolo.py --epochs 50
+.venv/bin/python app.py \
+  --mode yolo \
+  --dataset datasets/cubes-on-conveyor-belt \
+  --split testing
+```
+
+The trained weights are intentionally not committed. The expected inference
+model path is `models/yolo26n-cube.onnx`.
+
+## Current smoke-test result
+
+The initial implementation check below used the frozen 15-image public test
+split and a 50-epoch YOLO26n run. Timings are from the development environment,
+not a Raspberry Pi 4, so they are only implementation checks.
+
+| Metric | OpenCV | YOLO26n ONNX |
+|---|---:|---:|
+| True positives / ground truth | 35 / 35 | 33 / 35 |
+| Precision | 100% | 89.2% |
+| Recall | 100% | 94.3% |
+| F1 | 100% | 91.7% |
+| Exact-count images | 15 / 15 | 11 / 15 |
+| Mean matched IoU | 0.825 | 0.923 |
+
+Run the actual performance benchmark again on the Raspberry Pi; do not compare
+the development-machine latency numbers against future Pi measurements.
+
+## Tests
+
+```bash
+.venv/bin/python -m pytest -q
+```

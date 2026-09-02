@@ -77,7 +77,8 @@ before running the held-out test set.
 - Object tracking and track IDs.
 - Directional line crossing.
 - Counting the same physical object once across several frames.
-- An annotated output video.
+- Temporal video input and a corresponding inference-FPS claim. The app may
+  create a slideshow-style MP4 from annotated test images for visual review.
 - Color classification.
 - Training on the Raspberry Pi.
 
@@ -94,6 +95,8 @@ The image-based first version is complete when:
    and memory usage.
 7. Runs can be reproduced on a fresh Raspberry Pi 4 from documented commands.
 8. Conclusions clearly separate smoke-test evidence from a later held-out test.
+9. Each run creates a short review MP4 without treating it as temporal-video
+   evidence.
 
 ## 5. Architecture
 

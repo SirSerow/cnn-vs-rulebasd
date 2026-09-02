@@ -3,5 +3,12 @@ datasets/
 
 # Generated outputs and Python caches.
 results/
+.venv/
+*.egg-info/
+yolo26n.pt
+models/*.onnx
+models/*.pt
+datasets/yolo-cubes/
+training_runs/
 __pycache__/
 *.py[cod]

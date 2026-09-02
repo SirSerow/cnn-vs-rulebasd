@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conveyor-counter"
+version = "0.1.0"
+description = "Compare OpenCV and YOLO26 ONNX cube counting on a conveyor dataset."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "onnxruntime>=1.20",
+    "opencv-python-headless>=4.10",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+train = ["ultralytics>=8.4.138"]
+
+[project.scripts]
+conveyor-counter = "conveyor_counter.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["conveyor_counter*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]

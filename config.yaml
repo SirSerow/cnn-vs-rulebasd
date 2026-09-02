@@ -1,0 +1,38 @@
+dataset:
+  normalized_size: [640, 480]
+
+opencv:
+  # The belt occupies this vertical range after normalization.
+  roi_y: [115, 380]
+  color_ranges:
+    - [[0, 60, 40], [12, 255, 255]]
+    - [[165, 60, 40], [179, 255, 255]]
+    - [[15, 60, 40], [42, 255, 255]]
+    - [[38, 40, 25], [95, 255, 255]]
+    - [[90, 45, 25], [135, 255, 255]]
+  morphology_kernel: 5
+  closing_iterations: 2
+  min_area_px: 300
+  max_area_px: 15000
+  min_size_px: 25
+  max_size_px: 140
+  min_aspect_ratio: 0.45
+  max_aspect_ratio: 2.2
+  min_solidity: 0.65
+  min_rectangularity: 0.35
+  bbox_padding_px: 5
+  reject_frame_border: true
+
+yolo:
+  model_path: models/yolo26n-cube.onnx
+  confidence_threshold: 0.35
+
+evaluation:
+  match_iou: 0.50
+
+benchmark:
+  warmup_runs: 3
+
+output:
+  video_fps: 1.0
+  seconds_per_image: 2

@@ -13,7 +13,6 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPOSITORY_ROOT / "datasets" / "cubes-on-conveyor-belt"
 DATASET_REPOSITORY = (
@@ -112,7 +111,9 @@ def validate_dataset(root: Path) -> dict[str, object]:
                     raise RuntimeError(f"Invalid box in {labels_path}: {box}") from exc
                 if any(not isinstance(value, int) or value < 0 for value in values[:2]):
                     raise RuntimeError(f"Invalid box origin in {labels_path}: {box}")
-                if any(not isinstance(value, int) or value <= 0 for value in values[2:]):
+                if any(
+                    not isinstance(value, int) or value <= 0 for value in values[2:]
+                ):
                     raise RuntimeError(f"Invalid box size in {labels_path}: {box}")
                 class_counts[label] += 1
                 total_boxes += 1
@@ -155,8 +156,7 @@ def source_metadata(counts: dict[str, object]) -> dict[str, object]:
         "revision": REVISION,
         "format": "Edge Impulse object detection",
         "source_page": (
-            "https://docs.edgeimpulse.com/datasets/image/"
-            "cubes-on-conveyor-belt-colors"
+            "https://docs.edgeimpulse.com/datasets/image/cubes-on-conveyor-belt-colors"
         ),
         "license": "BSD-3-Clause-Clear",
         "class_names": sorted(EXPECTED_CLASSES),
