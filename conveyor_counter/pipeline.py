@@ -9,7 +9,7 @@ from pathlib import Path
 
 import cv2
 
-from .dataset import EdgeImpulseImageDataset
+from .dataset import CocoImageDataset, EdgeImpulseImageDataset
 from .detectors.base import Detector
 from .evaluation import Summary, summarize
 from .models import ImageResult
@@ -17,7 +17,7 @@ from .rendering import render
 
 
 def run_pipeline(
-    dataset: EdgeImpulseImageDataset,
+    dataset: EdgeImpulseImageDataset | CocoImageDataset,
     detector: Detector,
     mode: str,
     output_dir: Path,
