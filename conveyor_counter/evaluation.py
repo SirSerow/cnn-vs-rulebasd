@@ -97,7 +97,7 @@ def summarize(results: list[ImageResult], match_iou: float) -> Summary:
         mean_matched_iou=mean(matched_ious) if matched_ious else 0.0,
         mean_absolute_count_error=mean(absolute_count_errors),
         exact_count_accuracy=_safe_ratio(exact_counts, len(results)),
-        total_absolute_count_error=abs(predicted_boxes - ground_truth_boxes),
+        total_absolute_count_error=sum(absolute_count_errors),
         median_detection_ms=median(detection_times),
         p95_detection_ms=float(np.percentile(detection_times, 95)),
         detector_images_per_second=_safe_ratio(1000.0, mean(detection_times)),
