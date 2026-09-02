@@ -1,0 +1,7 @@
+# Downloaded inputs are reproducible from data/dataset_sources.json.
+datasets/
+
+# Generated outputs and Python caches.
+results/
+__pycache__/
+*.py[cod]

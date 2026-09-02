@@ -1,0 +1,49 @@
+{
+  "edge_impulse_cubes_on_conveyor_belt": {
+    "description": "Annotated images of separated colored cubes on a real conveyor belt.",
+    "kind": "object_detection_image_dataset",
+    "provider": "Edge Impulse",
+    "source_page": "https://docs.edgeimpulse.com/datasets/image/cubes-on-conveyor-belt-colors",
+    "public_project": "https://studio.edgeimpulse.com/public/230968/latest",
+    "download_mirror": "https://huggingface.co/datasets/edgeimpulse/cubes-on-conveyor-belt",
+    "revision": "e3d1c8b0c4872b70fcd77d86dec3bde7875e6054",
+    "download_script": "scripts/download_dataset.py",
+    "download_format": "Edge Impulse object detection JSON",
+    "license": "BSD-3-Clause-Clear",
+    "license_url": "https://spdx.org/licenses/BSD-3-Clause-Clear.html",
+    "mirror_metadata_license": "Apache-2.0",
+    "mirror_metadata_license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+    "credentials": "No account or API key is required. Deployment requires git and git-lfs.",
+    "classes": [
+      "blue",
+      "green",
+      "red",
+      "yellow"
+    ],
+    "evaluation_class": "cube",
+    "pinned_snapshot": {
+      "total_images": 70,
+      "training_images": 55,
+      "testing_images": 15,
+      "total_boxes": 156,
+      "boxes_by_class": {
+        "blue": 39,
+        "green": 39,
+        "red": 39,
+        "yellow": 39
+      },
+      "objects_per_image": [
+        1,
+        4
+      ]
+    },
+    "evaluation_scope": "Tune and train only on the training split; evaluate the frozen methods on testing.",
+    "limitations": [
+      "The 15-image testing split is sufficient only for an initial smoke benchmark, not a strong general accuracy claim.",
+      "Images appear to include related capture sequences, so the published train/test split may contain near-neighbor leakage.",
+      "Color labels are collapsed to one cube class because the experiment evaluates detection and counting rather than color classification.",
+      "Still images support box-level and per-image count evaluation but cannot evaluate tracking, line crossing, duplicate temporal counts, or video FPS.",
+      "A final study should use a larger test set grouped by capture sequence and kept hidden until parameters are frozen."
+    ]
+  }
+}
