@@ -1,0 +1,82 @@
+name: Road vehicle benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "conveyor_counter/**"
+      - "configs/road.yaml"
+      - "scripts/download_road_dataset.py"
+      - "scripts/export_yolo26_vehicle.py"
+      - "scripts/compare_results.py"
+      - "tests/**"
+      - "pyproject.toml"
+      - ".github/workflows/road-benchmark.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install project
+        run: python -m pip install -e ".[dev,train]"
+
+      - name: Run unit tests
+        run: python -m pytest -q
+
+      - name: Download annotated road sequence
+        run: python scripts/download_road_dataset.py
+
+      - name: Export pretrained YOLO26n
+        run: python scripts/export_yolo26_vehicle.py
+
+      - name: Run OpenCV MOG2 benchmark
+        run: |
+          python app.py \
+            --mode opencv \
+            --config configs/road.yaml \
+            --dataset datasets/vehicle-coco-examples \
+            --split val \
+            --output results/road-opencv
+
+      - name: Run YOLO26n ONNX benchmark
+        run: |
+          python app.py \
+            --mode yolo \
+            --config configs/road.yaml \
+            --dataset datasets/vehicle-coco-examples \
+            --split val \
+            --output results/road-yolo
+
+      - name: Print comparison
+        run: |
+          python scripts/compare_results.py \
+            --opencv results/road-opencv/summary.json \
+            --yolo results/road-yolo/summary.json \
+            --output results/road-comparison.md
+
+      - name: Upload videos and metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: road-vehicle-benchmark
+          path: |
+            results/road-comparison.md
+            results/road-opencv/summary.json
+            results/road-opencv/results.csv
+            results/road-opencv/opencv-val-review.mp4
+            results/road-yolo/summary.json
+            results/road-yolo/results.csv
+            results/road-yolo/yolo-val-review.mp4
+          if-no-files-found: error
+          retention-days: 30
