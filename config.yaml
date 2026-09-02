@@ -34,5 +34,6 @@ benchmark:
   warmup_runs: 3
 
 output:
+  object_label: cube
   video_fps: 1.0
   seconds_per_image: 2
