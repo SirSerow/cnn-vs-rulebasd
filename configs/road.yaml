@@ -1,0 +1,46 @@
+dataset:
+  format: coco
+  normalized_size: [640, 480]
+
+opencv:
+  method: background_subtraction
+  # MOG2 is intentionally simple: motion mask -> morphology -> contours.
+  history: 80
+  var_threshold: 25
+  detect_shadows: true
+  learning_rate: 0.01
+  roi_y: [40, 480]
+  morphology_kernel: 5
+  opening_iterations: 1
+  closing_iterations: 2
+  min_area_px: 80
+  max_area_px: 30000
+  min_width_px: 10
+  max_width_px: 280
+  min_height_px: 7
+  max_height_px: 190
+  min_aspect_ratio: 0.35
+  max_aspect_ratio: 5.0
+  min_solidity: 0.35
+  min_rectangularity: 0.20
+  bbox_padding_px: 3
+  reject_frame_border: true
+
+yolo:
+  model_path: models/yolo26n-coco.onnx
+  confidence_threshold: 0.25
+  # COCO: car, motorcycle, bus, truck.
+  class_ids: [2, 3, 5, 7]
+
+evaluation:
+  match_iou: 0.50
+
+benchmark:
+  # Repeating the first frame initializes MOG2's background state.
+  warmup_runs: 3
+
+output:
+  object_label: vehicle
+  video_fps: 10.0
+  # One source frame per output frame creates a natural review sequence.
+  seconds_per_image: 0
