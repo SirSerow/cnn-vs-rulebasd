@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "conveyor-counter"
 version = "0.1.0"
-description = "Compare OpenCV and YOLO26 ONNX cube counting on a conveyor dataset."
+description = "Compare OpenCV and YOLO26 ONNX object counting on annotated scenes."
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=2.0",
@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
-train = ["ultralytics>=8.4.138"]
+train = ["ultralytics>=8.4.138", "onnx>=1.17", "onnxslim>=0.1.65"]
 
 [project.scripts]
 conveyor-counter = "conveyor_counter.cli:main"
