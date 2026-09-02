@@ -106,15 +106,15 @@ class OpenCVDetector:
         solidity = area / hull_area if hull_area else 0.0
         rectangularity = area / (width * height)
         aspect_ratio = width / height
+        min_width = self.config.get("min_width_px", self.config.get("min_size_px"))
+        max_width = self.config.get("max_width_px", self.config.get("max_size_px"))
+        min_height = self.config.get("min_height_px", self.config.get("min_size_px"))
+        max_height = self.config.get("max_height_px", self.config.get("max_size_px"))
 
         if not (
             self.config["min_area_px"] <= area <= self.config["max_area_px"]
-            and self.config.get("min_width_px", self.config["min_size_px"])
-            <= width
-            <= self.config.get("max_width_px", self.config["max_size_px"])
-            and self.config.get("min_height_px", self.config["min_size_px"])
-            <= height
-            <= self.config.get("max_height_px", self.config["max_size_px"])
+            and min_width <= width <= max_width
+            and min_height <= height <= max_height
             and self.config["min_aspect_ratio"]
             <= aspect_ratio
             <= self.config["max_aspect_ratio"]
