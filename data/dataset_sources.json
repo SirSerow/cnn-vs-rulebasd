@@ -45,5 +45,33 @@
       "Still images support box-level and per-image count evaluation but cannot evaluate tracking, line crossing, duplicate temporal counts, or video FPS.",
       "A final study should use a larger test set grouped by capture sequence and kept hidden until parameters are frozen."
     ]
+  },
+  "paddlex_ua_detrac_vehicle_example": {
+    "description": "Ordered, annotated road-camera frames derived from UA-DETRAC.",
+    "kind": "object_detection_image_sequence",
+    "provider": "PaddleX example archive; source benchmark by the UA-DETRAC authors",
+    "source_page": "https://github.com/PaddlePaddle/PaddleX/blob/develop/docs/module_usage/tutorials/cv_modules/vehicle_detection.en.md",
+    "download_url": "https://paddle-model-ecology.bj.bcebos.com/paddlex/data/vehicle_coco_examples.tar",
+    "download_script": "scripts/download_road_dataset.py",
+    "download_format": "COCO object detection JSON",
+    "credentials": "No account or API key is required.",
+    "classes": [
+      "car",
+      "bus",
+      "truck",
+      "van"
+    ],
+    "evaluation_class": "vehicle",
+    "expected_snapshot": {
+      "training_images": 500,
+      "validation_images": 100
+    },
+    "evaluation_scope": "Use the ordered validation frames for both methods; use no road-dataset training or tuning for YOLO26.",
+    "limitations": [
+      "The example contains only 100 validation frames from one road-camera sequence.",
+      "The benchmark measures per-frame detection and count accuracy, not unique line-crossing counts.",
+      "YOLO26 uses pretrained COCO weights; the OpenCV baseline uses scene-specific motion parameters.",
+      "The source is published for research benchmarking; verify upstream terms before commercial redistribution."
+    ]
   }
 }
