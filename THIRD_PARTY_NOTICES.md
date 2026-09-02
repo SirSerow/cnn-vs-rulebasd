@@ -19,3 +19,20 @@ Suggested attribution:
 
 > “Cubes on conveyor belt (colors)” dataset by Edge Impulse, downloaded from
 > the Edge Impulse Hugging Face mirror at revision `e3d1c8b0c4872b70fcd77d86dec3bde7875e6054`.
+
+## UA-DETRAC vehicle example
+
+- Source benchmark: [UA-DETRAC](https://arxiv.org/abs/1511.04136)
+- Example archive provider: [PaddleX](https://github.com/PaddlePaddle/PaddleX)
+- Archive: `vehicle_coco_examples.tar`
+- Use: public research benchmark; verify the upstream dataset terms before
+  commercial redistribution.
+
+The downloader fetches a 600-frame COCO-format example derived from UA-DETRAC.
+The 100 annotated validation frames are used by this experiment. Dataset bytes,
+model weights, and generated review videos are not committed to the repository.
+
+Suggested attribution:
+
+> L. Wen et al., “UA-DETRAC: A New Benchmark and Protocol for Multi-Object
+> Detection and Tracking,” arXiv:1511.04136.
