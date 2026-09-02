@@ -23,8 +23,9 @@ def run_pipeline(
     output_dir: Path,
     match_iou: float,
     video_fps: float,
-    seconds_per_image: int,
+    seconds_per_image: float,
     warmup_runs: int,
+    object_label: str = "object",
     write_images: bool = True,
 ) -> Summary:
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -32,7 +33,7 @@ def run_pipeline(
     if write_images:
         image_dir.mkdir(exist_ok=True)
 
-    video_path = output_dir / f"{mode}-testing-review.mp4"
+    video_path = output_dir / f"{mode}-{dataset.split}-review.mp4"
     writer = cv2.VideoWriter(
         str(video_path),
         cv2.VideoWriter_fourcc(*"mp4v"),
@@ -62,7 +63,14 @@ def run_pipeline(
                 detection_ms,
             )
             results.append(result)
-            frame = render(sample.image, detections, mode, detection_ms)
+            frame = render(
+                sample.image,
+                detections,
+                mode,
+                detection_ms,
+                len(sample.ground_truth),
+                object_label,
+            )
             for _ in range(max(1, round(video_fps * seconds_per_image))):
                 writer.write(frame)
             if write_images:
