@@ -1,4 +1,4 @@
-# CNN vs Rule-Based Conveyor Image Counter
+# CNN vs Rule-Based Object Counter
 
 This repository implements a Raspberry Pi 4 experiment comparing two approaches on
 annotated images from a real conveyor:
@@ -183,3 +183,82 @@ the development-machine latency numbers against future Pi measurements.
 ```bash
 .venv/bin/python -m pytest -q
 ```
+
+## Road-vehicle experiment
+
+The second experiment deliberately moves beyond the controlled cube scene. It
+uses PaddleX's small COCO-format vehicle example derived from the
+[UA-DETRAC road-traffic benchmark](https://arxiv.org/abs/1511.04136). UA-DETRAC
+contains real fixed-camera traffic sequences with vehicle boxes; its full
+benchmark has more than 140,000 frames. The compact example used here contains
+500 training and 100 validation frames. Only the ordered 100-frame validation
+sequence is evaluated.
+
+The application architecture is unchanged:
+
+- both methods receive the same 640×480 frames;
+- both return the existing shared `Detection` box contract;
+- the same IoU matcher, per-frame count evaluator, renderer, CSV writer, and
+  MP4 writer are reused;
+- only the dataset adapter and the OpenCV scene method are selected by
+  `configs/road.yaml`.
+
+The two methods are:
+
+1. **YOLO26n ONNX** with pretrained COCO weights and the COCO road classes
+   `car`, `motorcycle`, `bus`, and `truck`. It is **not fine-tuned** on
+   UA-DETRAC.
+2. **OpenCV MOG2** background subtraction, shadow removal, morphology, and
+   contour filtering. This is intentionally a simple fixed-camera baseline.
+
+This is a useful counterexample to the cube result. Vehicle appearance, scale,
+occlusion, and stopped/slow traffic are semantic problems. Motion subtraction
+can be fast, but it can merge nearby cars, fragment a car, or absorb a stopped
+car into the background.
+
+### Run it locally
+
+```bash
+.venv/bin/pip install -e ".[dev,train]"
+.venv/bin/python scripts/download_road_dataset.py
+.venv/bin/python scripts/export_yolo26_vehicle.py
+
+.venv/bin/python app.py \
+  --mode opencv \
+  --config configs/road.yaml \
+  --dataset datasets/vehicle-coco-examples \
+  --split val \
+  --output results/road-opencv
+
+.venv/bin/python app.py \
+  --mode yolo \
+  --config configs/road.yaml \
+  --dataset datasets/vehicle-coco-examples \
+  --split val \
+  --output results/road-yolo
+
+.venv/bin/python scripts/compare_results.py \
+  --opencv results/road-opencv/summary.json \
+  --yolo results/road-yolo/summary.json
+```
+
+The outputs include one annotated 10 FPS MP4 per method, per-frame CSV files,
+JSON summaries, and a Markdown comparison. The videos show both the predicted
+and ground-truth vehicle counts.
+
+The GitHub Actions workflow `.github/workflows/road-benchmark.yml` runs the
+same commands on a clean CPU runner and publishes the videos and metrics as one
+downloadable artifact.
+
+### Interpretation limits
+
+This remains a per-frame detection/count benchmark, matching the cube
+experiment. It does not yet track identities or report the number of unique
+cars crossing a line. Adding a shared tracker and line-crossing counter should
+be treated as a separate third experiment, because it introduces association
+errors beyond detector quality.
+
+The UA-DETRAC-derived sample is published for research benchmarking. Consult
+the upstream terms before commercial redistribution; the complete dataset,
+weights, and generated videos are not committed here.
+
