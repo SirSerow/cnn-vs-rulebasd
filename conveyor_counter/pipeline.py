@@ -8,11 +8,12 @@ import time
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 from .dataset import CocoImageDataset, EdgeImpulseImageDataset
 from .detectors.base import Detector
 from .evaluation import Summary, summarize
-from .models import ImageResult
+from .models import BBox, ImageResult, Polygon
 from .rendering import render
 
 
@@ -27,6 +28,7 @@ def run_pipeline(
     warmup_runs: int,
     object_label: str = "object",
     write_images: bool = True,
+    evaluation_roi: tuple[Polygon, ...] = (),
 ) -> Summary:
     output_dir.mkdir(parents=True, exist_ok=True)
     image_dir = output_dir / "images"
@@ -56,10 +58,16 @@ def run_pipeline(
             start = time.perf_counter()
             detections = tuple(detector.detect(sample))
             detection_ms = (time.perf_counter() - start) * 1000
+            detections = tuple(
+                detection
+                for detection in detections
+                if _box_center_is_in_roi(detection.bbox_xyxy, evaluation_roi)
+            )
+            ground_truth = sample.ground_truth
             result = ImageResult(
                 sample.image_id,
                 detections,
-                sample.ground_truth,
+                ground_truth,
                 detection_ms,
             )
             results.append(result)
@@ -68,8 +76,9 @@ def run_pipeline(
                 detections,
                 mode,
                 detection_ms,
-                len(sample.ground_truth),
+                ground_truth,
                 object_label,
+                evaluation_roi,
             )
             for _ in range(max(1, round(video_fps * seconds_per_image))):
                 writer.write(frame)
@@ -81,6 +90,22 @@ def run_pipeline(
     summary = summarize(results, match_iou)
     _write_results(output_dir, results, summary)
     return summary
+
+
+def _box_center_is_in_roi(bbox: BBox, roi_polygons: tuple[Polygon, ...]) -> bool:
+    if not roi_polygons:
+        return True
+    x1, y1, x2, y2 = bbox
+    center = ((x1 + x2) / 2, (y1 + y2) / 2)
+    return any(
+        cv2.pointPolygonTest(
+            np.asarray(polygon, dtype=np.int32),
+            center,
+            False,
+        )
+        >= 0
+        for polygon in roi_polygons
+    )
 
 
 def _write_results(

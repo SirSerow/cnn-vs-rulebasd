@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +10,8 @@ from numpy.typing import NDArray
 
 BBox = tuple[int, int, int, int]
 Image = NDArray[np.uint8]
+Point = tuple[int, int]
+Polygon = tuple[Point, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +25,9 @@ class Detection:
     bbox_xyxy: BBox
     confidence: float
     class_id: int = 0
+    # Classical detectors may expose the contour that produced the box. Neural
+    # detectors leave this unset because they predict boxes directly.
+    region_polygon: Polygon | None = field(default=None, compare=False, repr=False)
 
 
 @dataclass(frozen=True, slots=True)

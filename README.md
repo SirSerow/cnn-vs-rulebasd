@@ -11,6 +11,11 @@ contract. Their boxes and per-image object counts are evaluated against the
 provided annotations. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the complete
 experimental protocol.
 
+OpenCV review frames additionally show each accepted foreground contour as a
+translucent orange region. This is the exact contour from which OpenCV derives
+the green bounding box, making the rule-based segmentation visibly distinct
+from YOLO's direct box predictions.
+
 The first working version is implemented. It loads Edge Impulse annotations,
 runs either backend, calculates shared detection/count metrics, writes annotated
 images, and creates an MP4 review sequence from the still-image test split.
@@ -173,7 +178,19 @@ not a Raspberry Pi 4, so they are only implementation checks.
 | Recall | 100% | 94.3% |
 | F1 | 100% | 91.7% |
 | Exact-count images | 15 / 15 | 11 / 15 |
+| Mean absolute count error | 0.000 | 0.267 |
 | Mean matched IoU | 0.825 | 0.923 |
+| Median detector latency | 2.12 ms | 29.84 ms |
+| Detector throughput | 465.9 images/s | 29.3 images/s |
+
+### Cube visualization
+
+The matched frame below makes the methods visually distinct. OpenCV overlays
+the accepted color-segmentation contours in orange before deriving the green
+boxes. YOLO predicts the green boxes directly and therefore has no region
+overlay. Blue boxes are ground truth.
+
+![OpenCV color regions beside direct YOLO26 cube detections](docs/images/cubes-opencv-yolo-comparison.jpg)
 
 Run the actual performance benchmark again on the Raspberry Pi; do not compare
 the development-machine latency numbers against future Pi measurements.
@@ -197,6 +214,8 @@ sequence is evaluated.
 The application architecture is unchanged:
 
 - both methods receive the same 640×480 frames;
+- both methods are evaluated inside the two annotated traffic-lane polygons,
+  excluding unannotated parked vehicles;
 - both return the existing shared `Detection` box contract;
 - the same IoU matcher, per-frame count evaluator, renderer, CSV writer, and
   MP4 writer are reused;
@@ -225,7 +244,7 @@ There are eight annotated vehicles in the regions of interest.
 
 **OpenCV MOG2 — 4 predicted / 8 ground truth**
 
-![OpenCV MOG2 detects four of eight annotated vehicles](docs/images/road-opencv-frame.jpg)
+![OpenCV MOG2 foreground regions and boxes detect four of eight annotated vehicles](docs/images/road-opencv-frame.jpg)
 
 **YOLO26n ONNX — 8 predicted / 8 ground truth**
 
@@ -241,24 +260,24 @@ measurements.
 | Metric | OpenCV MOG2 | YOLO26n ONNX |
 |---|---:|---:|
 | Ground-truth boxes | 584 | 584 |
-| Predicted boxes | 281 | 504 |
-| True positives | 161 | 467 |
-| False positives | 120 | 37 |
-| False negatives | 423 | 117 |
-| Precision | 57.3% | 92.7% |
-| Recall | 27.6% | 80.0% |
-| F1 | 37.2% | 85.8% |
-| Mean matched IoU | 0.680 | 0.830 |
-| Exact-count frames | 9 / 100 | 30 / 100 |
-| Mean absolute count error | 3.17 | 1.12 |
-| Total absolute count error | 317 | 112 |
-| Median detector latency | 5.79 ms | 70.73 ms |
-| P95 detector latency | 7.99 ms | 97.07 ms |
-| Detector throughput | 163.4 images/s | 13.3 images/s |
+| Predicted boxes | 275 | 481 |
+| True positives | 157 | 459 |
+| False positives | 118 | 22 |
+| False negatives | 427 | 125 |
+| Precision | 57.1% | 95.4% |
+| Recall | 26.9% | 78.6% |
+| F1 | 36.6% | 86.2% |
+| Mean matched IoU | 0.679 | 0.828 |
+| Exact-count frames | 9 / 100 | 26 / 100 |
+| Mean absolute count error | 3.23 | 1.23 |
+| Total absolute count error | 323 | 123 |
+| Median detector latency | 3.05 ms | 37.14 ms |
+| P95 detector latency | 3.83 ms | 63.90 ms |
+| Detector throughput | 322.4 images/s | 24.4 images/s |
 
-YOLO26n improved F1 by **48.6 percentage points** and reduced mean absolute
-count error by **64.7%**, despite using pretrained COCO weights without
-fine-tuning. OpenCV was approximately **12.3× faster**, but missed many stopped,
+YOLO26n improved F1 by **49.6 percentage points** and reduced mean absolute
+count error by **61.9%**, despite using pretrained COCO weights without
+fine-tuning. OpenCV was approximately **13.2× faster**, but missed many stopped,
 overlapping, and low-contrast vehicles. This reverses the controlled cube
 result: classical vision excels when appearance and background are tightly
 constrained, while the CNN generalizes much better to a complex road scene.
@@ -291,7 +310,9 @@ constrained, while the CNN generalizes much better to a complex road scene.
 
 The outputs include one annotated 10 FPS MP4 per method, per-frame CSV files,
 JSON summaries, and a Markdown comparison. The videos show both the predicted
-and ground-truth vehicle counts.
+and ground-truth vehicle counts. OpenCV frames also overlay accepted foreground
+contours in orange; YOLO frames contain direct neural-network box predictions
+without segmentation regions.
 
 The GitHub Actions workflow `.github/workflows/road-benchmark.yml` runs the
 same commands on a clean CPU runner and publishes the videos and metrics as one
@@ -308,4 +329,3 @@ errors beyond detector quality.
 The UA-DETRAC-derived sample is published for research benchmarking. Consult
 the upstream terms before commercial redistribution; the complete dataset,
 weights, and generated videos are not committed here.
-

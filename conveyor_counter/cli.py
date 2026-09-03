@@ -10,6 +10,7 @@ from typing import Any
 from .config import load_config
 from .dataset import load_dataset
 from .detectors import OpenCVDetector, YoloOnnxDetector
+from .models import Polygon
 from .pipeline import run_pipeline
 
 
@@ -46,6 +47,10 @@ def main() -> int:
     config = load_config(args.config)
     dataset_config = config["dataset"]
     size = tuple(dataset_config["normalized_size"])
+    evaluation_roi: tuple[Polygon, ...] = tuple(
+        tuple((int(x), int(y)) for x, y in polygon)
+        for polygon in dataset_config.get("evaluation_roi_polygons", ())
+    )
     dataset = load_dataset(
         args.dataset,
         args.split,
@@ -64,6 +69,7 @@ def main() -> int:
         warmup_runs=int(config["benchmark"]["warmup_runs"]),
         object_label=str(config["output"].get("object_label", "object")),
         write_images=not args.no_images,
+        evaluation_roi=evaluation_roi,
     )
     print(json.dumps(summary.as_dict(), indent=2))
     print(f"Results: {output_dir}")

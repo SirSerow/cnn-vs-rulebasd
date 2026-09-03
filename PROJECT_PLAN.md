@@ -149,10 +149,10 @@ all boxes to image bounds.
 | Component | Responsibility |
 |---|---|
 | `EdgeImpulseImageDataset` | Enumerate a split, decode images, parse JSON boxes, collapse colors to `cube`, and produce deterministic IDs/order. |
-| `OpenCVDetector` | Threshold, morphology, contour extraction, and shape/size filtering. |
+| `OpenCVDetector` | Threshold, morphology, contour extraction, shape/size filtering, and expose each accepted contour for review rendering. |
 | `YoloOnnxDetector` | Letterbox, normalize, run ONNX, decode predictions, NMS, and restore coordinates. |
 | `Evaluator` | Match predictions to ground truth and compute detection/count metrics. |
-| `Renderer` | Draw consistent predicted boxes, labels, counts, and timing. |
+| `Renderer` | Draw predictions, ground truth, optional evaluation ROIs, and translucent OpenCV contour regions with a consistent legend. |
 | `MetricsCollector` | Record per-image stage latency, CPU, memory, and run metadata. |
 | `ResultWriter` | Write annotated images, raw CSV, and summary JSON. |
 
@@ -170,7 +170,8 @@ Initial pipeline:
 5. Apply closing to fill small gaps inside each cube mask.
 6. Extract external contours or connected components.
 7. Filter by area, width, height, aspect ratio, solidity, and rectangularity.
-8. Return clipped boxes through the shared contract as class 0 (`cube`).
+8. Return clipped boxes through the shared contract as class 0 (`cube`) and
+   attach the accepted contour that produced each box for visualization.
 
 All parameters belong in `config.yaml`. The testing images must not be used
 for manual threshold selection.
@@ -395,7 +396,8 @@ cnn-vs-rulebasd/
 2. **Shared contracts:** create `ImageSample`, `Detection`, and backend protocol.
 3. **OpenCV detector:** implement and tune only on training images.
 4. **Evaluation:** implement one-to-one box matching and count metrics.
-5. **Renderer and outputs:** create annotated images, CSV, and JSON.
+5. **Renderer and outputs:** create annotated images, CSV, JSON, and review MP4s;
+   show OpenCV contour regions separately from predicted and ground-truth boxes.
 6. **YOLO ONNX:** fine-tune/export externally and implement Pi inference.
 7. **Benchmarking:** add stage timers, resource capture, warm-up, and repeats.
 8. **Pi validation:** run both modes under recorded thermal conditions.

@@ -130,4 +130,11 @@ class OpenCVDetector:
             min(image_width, x + width + padding),
             min(image_height, y + height + padding),
         )
-        return Detection(bbox, confidence=1.0)
+        region_polygon = tuple(
+            (int(point[0][0]), int(point[0][1])) for point in contour
+        )
+        return Detection(
+            bbox,
+            confidence=1.0,
+            region_polygon=region_polygon,
+        )

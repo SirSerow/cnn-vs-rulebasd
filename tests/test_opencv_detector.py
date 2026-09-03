@@ -32,3 +32,12 @@ def test_opencv_detector_finds_a_colored_cube():
 
     assert len(detections) == 1
     assert detections[0].bbox_xyxy == (245, 195, 326, 276)
+    assert detections[0].region_polygon is not None
+    polygon_x = [point[0] for point in detections[0].region_polygon]
+    polygon_y = [point[1] for point in detections[0].region_polygon]
+    assert (min(polygon_x), min(polygon_y), max(polygon_x), max(polygon_y)) == (
+        250,
+        200,
+        320,
+        270,
+    )
