@@ -216,6 +216,53 @@ occlusion, and stopped/slow traffic are semantic problems. Motion subtraction
 can be fast, but it can merge nearby cars, fragment a car, or absorb a stopped
 car into the background.
 
+### Example result
+
+The matched frames below come from validation image
+`MVI_20033__img00056.jpg`. Blue boxes are ground truth, green boxes are
+predictions, and the yellow polygons define the two evaluated traffic lanes.
+There are eight annotated vehicles in the regions of interest.
+
+**OpenCV MOG2 — 4 predicted / 8 ground truth**
+
+![OpenCV MOG2 detects four of eight annotated vehicles](docs/images/road-opencv-frame.jpg)
+
+**YOLO26n ONNX — 8 predicted / 8 ground truth**
+
+![Pretrained YOLO26n detects all eight annotated vehicles](docs/images/road-yolo26-frame.jpg)
+
+### Measured results
+
+The following results were produced on the same 100 ordered validation frames
+at 640×480. Predictions were matched to ground truth at IoU 0.50. Timings are
+detector-only measurements from the development CPU, not Raspberry Pi 4
+measurements.
+
+| Metric | OpenCV MOG2 | YOLO26n ONNX |
+|---|---:|---:|
+| Ground-truth boxes | 584 | 584 |
+| Predicted boxes | 281 | 504 |
+| True positives | 161 | 467 |
+| False positives | 120 | 37 |
+| False negatives | 423 | 117 |
+| Precision | 57.3% | 92.7% |
+| Recall | 27.6% | 80.0% |
+| F1 | 37.2% | 85.8% |
+| Mean matched IoU | 0.680 | 0.830 |
+| Exact-count frames | 9 / 100 | 30 / 100 |
+| Mean absolute count error | 3.17 | 1.12 |
+| Total absolute count error | 317 | 112 |
+| Median detector latency | 5.79 ms | 70.73 ms |
+| P95 detector latency | 7.99 ms | 97.07 ms |
+| Detector throughput | 163.4 images/s | 13.3 images/s |
+
+YOLO26n improved F1 by **48.6 percentage points** and reduced mean absolute
+count error by **64.7%**, despite using pretrained COCO weights without
+fine-tuning. OpenCV was approximately **12.3× faster**, but missed many stopped,
+overlapping, and low-contrast vehicles. This reverses the controlled cube
+result: classical vision excels when appearance and background are tightly
+constrained, while the CNN generalizes much better to a complex road scene.
+
 ### Run it locally
 
 ```bash
