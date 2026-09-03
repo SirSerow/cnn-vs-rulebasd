@@ -95,8 +95,8 @@ The image-based first version is complete when:
    and memory usage.
 7. Runs can be reproduced on a fresh Raspberry Pi 4 from documented commands.
 8. Conclusions clearly separate smoke-test evidence from a later held-out test.
-9. Each run creates a short review MP4 without treating it as temporal-video
-   evidence.
+9. Rendered review runs create a short MP4 without treating it as
+   temporal-video evidence; Raspberry Pi timing runs save metrics only.
 
 ## 5. Architecture
 
@@ -383,9 +383,12 @@ cnn-vs-rulebasd/
 
 ### Raspberry Pi acceptance test
 
-- Fresh installation and dataset download succeed from documented commands.
-- The downloaded export validates before inference starts.
-- Both modes complete repeated headless and rendered runs.
+- The bootstrap script creates its environment and installs runtime-only
+  dependencies from documented commands.
+- Both pre-uploaded annotated datasets and ONNX exports validate before
+  inference starts.
+- Both modes complete metrics-only runs on the cube and road datasets without
+  training, export, image rendering, or video encoding.
 - Memory usage remains bounded.
 - No official run reports undervoltage or thermal throttling.
 

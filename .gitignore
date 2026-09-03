@@ -4,6 +4,7 @@ datasets/
 # Generated outputs and Python caches.
 results/
 .venv/
+.venv-rpi/
 *.egg-info/
 yolo26n.pt
 models/*.onnx

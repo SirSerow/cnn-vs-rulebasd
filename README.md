@@ -115,17 +115,87 @@ capture sequences, so the published split may contain near-neighbor leakage.
 Report this limitation and use a larger, capture-grouped held-out set before
 publishing definitive accuracy conclusions.
 
-## Setup
+## PC setup
 
-Python 3.11 or newer is required.
+Use a 64-bit Python 3.11 or newer environment. The runtime project installs
+ONNX Runtime CPU, headless OpenCV, NumPy, and PyYAML. The `dev` extra adds only
+the test dependency; the substantially larger `train` extra is required only
+on the development PC that trains or exports a model.
+
+Linux/macOS:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -e ".[dev]"
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -e ".[dev]"
 .venv/bin/python scripts/download_dataset.py
 ```
 
-On Windows, replace `.venv/bin/` with `.venv\\Scripts\\`.
+Windows PowerShell:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe scripts\download_dataset.py
+```
+
+The commands above are correct for inference and testing on a PC. Install
+`.[dev,train]` instead when the PC must run `scripts/train_yolo.py` or
+`scripts/export_yolo26_vehicle.py`. Training and ONNX export are not Raspberry
+Pi setup steps.
+
+## Raspberry Pi setup and complete benchmark
+
+Use 64-bit Raspberry Pi OS on the Raspberry Pi 4 with Python 3.11 or newer. A
+32-bit OS is rejected because the standard ONNX Runtime Python installation is
+not supported by this deployment script. Active cooling and a stable power
+supply are recommended for repeatable timing.
+
+Before starting, copy the repository, both complete annotated datasets, and
+both previously exported ONNX files to these paths:
+
+```text
+datasets/cubes-on-conveyor-belt/       # includes testing/bounding_boxes.labels
+datasets/vehicle-coco-examples/        # includes val images and COCO annotations
+models/yolo26n-cube.onnx
+models/yolo26n-coco.onnx
+```
+
+Then run one command from anywhere inside or outside the repository:
+
+```bash
+./scripts/run_raspberry_pi_benchmarks.sh
+```
+
+The script installs `python3-venv` through Raspberry Pi OS's package manager if
+needed, creates `.venv-rpi`, upgrades pip, installs only the inference
+dependencies, validates that the pre-uploaded inputs exist, and runs these four
+cases at 640×480:
+
+1. cubes with OpenCV color segmentation;
+2. cubes with the trained YOLO26n cube ONNX model;
+3. road vehicles with OpenCV MOG2;
+4. road vehicles with the pretrained COCO YOLO26n ONNX model.
+
+It never calls a dataset downloader, training script, or model exporter. Each
+run uses `--metrics-only`, so frame rendering, JPEG writing, and MP4 encoding
+are all skipped. A timestamped directory under `results/raspberry-pi/` contains
+only reproducibility metadata plus `summary.json` and `results.csv` for each of
+the four cases:
+
+```text
+results/raspberry-pi/<UTC timestamp>/
+├── environment-before.txt
+├── environment-after.txt
+├── cubes/{opencv,yolo}/{summary.json,results.csv}
+└── road/{opencv,yolo}/{summary.json,results.csv}
+```
+
+The Pi still needs internet access on its first run to install Python packages;
+the datasets and weights are not downloaded. To use a persistent result path,
+different Python executable, or different virtual-environment location, set
+`RPI_RESULTS_DIR`, `RPI_PYTHON_BIN`, or `RPI_VENV_DIR` before the command.
 
 ## Run the OpenCV baseline
 
@@ -200,6 +270,9 @@ the development-machine latency numbers against future Pi measurements.
 ```bash
 .venv/bin/python -m pytest -q
 ```
+
+For any individual benchmark, `--metrics-only` produces the same JSON and CSV
+metrics without creating annotated images or a review video.
 
 ## Road-vehicle experiment
 

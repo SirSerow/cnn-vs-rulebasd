@@ -25,7 +25,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--split", default="testing")
     parser.add_argument("--config", type=Path, default=Path("config.yaml"))
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--no-images", action="store_true")
+    parser.add_argument(
+        "--no-images",
+        action="store_true",
+        help="Do not write annotated JPEGs.",
+    )
+    parser.add_argument(
+        "--no-video",
+        action="store_true",
+        help="Do not render or encode the review MP4.",
+    )
+    parser.add_argument(
+        "--metrics-only",
+        action="store_true",
+        help=(
+            "Write only summary.json and results.csv "
+            "(no rendering or video encoding)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -68,7 +85,8 @@ def main() -> int:
         seconds_per_image=float(config["output"]["seconds_per_image"]),
         warmup_runs=int(config["benchmark"]["warmup_runs"]),
         object_label=str(config["output"].get("object_label", "object")),
-        write_images=not args.no_images,
+        write_images=not (args.no_images or args.metrics_only),
+        write_video=not (args.no_video or args.metrics_only),
         evaluation_roi=evaluation_roi,
     )
     print(json.dumps(summary.as_dict(), indent=2))

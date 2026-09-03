@@ -28,6 +28,7 @@ def run_pipeline(
     warmup_runs: int,
     object_label: str = "object",
     write_images: bool = True,
+    write_video: bool = True,
     evaluation_roi: tuple[Polygon, ...] = (),
 ) -> Summary:
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -35,22 +36,23 @@ def run_pipeline(
     if write_images:
         image_dir.mkdir(exist_ok=True)
 
-    video_path = output_dir / f"{mode}-{dataset.split}-review.mp4"
-    writer = cv2.VideoWriter(
-        str(video_path),
-        cv2.VideoWriter_fourcc(*"mp4v"),
-        video_fps,
-        dataset.normalized_size,
-    )
-    if not writer.isOpened():
-        raise RuntimeError(f"Cannot create video: {video_path}")
-
     samples = list(dataset)
     if not samples:
-        writer.release()
         raise ValueError("The selected dataset split is empty")
     for _ in range(warmup_runs):
         detector.detect(samples[0])
+
+    writer: cv2.VideoWriter | None = None
+    if write_video:
+        video_path = output_dir / f"{mode}-{dataset.split}-review.mp4"
+        writer = cv2.VideoWriter(
+            str(video_path),
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            video_fps,
+            dataset.normalized_size,
+        )
+        if not writer.isOpened():
+            raise RuntimeError(f"Cannot create video: {video_path}")
 
     results: list[ImageResult] = []
     try:
@@ -71,21 +73,24 @@ def run_pipeline(
                 detection_ms,
             )
             results.append(result)
-            frame = render(
-                sample.image,
-                detections,
-                mode,
-                detection_ms,
-                ground_truth,
-                object_label,
-                evaluation_roi,
-            )
-            for _ in range(max(1, round(video_fps * seconds_per_image))):
-                writer.write(frame)
-            if write_images:
-                cv2.imwrite(str(image_dir / f"{index:03d}.jpg"), frame)
+            if write_images or writer is not None:
+                frame = render(
+                    sample.image,
+                    detections,
+                    mode,
+                    detection_ms,
+                    ground_truth,
+                    object_label,
+                    evaluation_roi,
+                )
+                if writer is not None:
+                    for _ in range(max(1, round(video_fps * seconds_per_image))):
+                        writer.write(frame)
+                if write_images:
+                    cv2.imwrite(str(image_dir / f"{index:03d}.jpg"), frame)
     finally:
-        writer.release()
+        if writer is not None:
+            writer.release()
 
     summary = summarize(results, match_iou)
     _write_results(output_dir, results, summary)
