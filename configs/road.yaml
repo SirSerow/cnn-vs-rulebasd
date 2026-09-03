@@ -4,8 +4,8 @@ dataset:
   # Only the two moving traffic lanes are annotated. Parked vehicles outside
   # these polygons must not count as predictions in either method.
   evaluation_roi_polygons:
-    - [[0, 480], [232, 36], [327, 36], [360, 480]]
-    - [[352, 36], [460, 36], [640, 480], [360, 480]]
+    - [[0, 480], [0, 400], [290, 36], [350, 36], [355, 480]]
+    - [[350, 36], [420, 36], [640, 230], [640, 490], [405, 480]]
 
 opencv:
   method: background_subtraction

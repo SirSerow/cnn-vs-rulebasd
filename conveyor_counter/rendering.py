@@ -18,11 +18,23 @@ def render(
     roi_polygons: tuple[Polygon, ...] = (),
 ) -> Image:
     output = image.copy()
+    roi_contours = [
+        np.asarray(polygon, dtype=np.int32).reshape(-1, 1, 2)
+        for polygon in roi_polygons
+        if len(polygon) >= 3
+    ]
+    if roi_contours:
+        roi_mask = np.zeros(output.shape[:2], dtype=np.uint8)
+        cv2.drawContours(roi_mask, roi_contours, -1, 255, cv2.FILLED)
+        outside_roi = roi_mask == 0
+        dark_gray = np.full_like(output, (70, 70, 70))
+        dimmed = cv2.addWeighted(output, 0.45, dark_gray, 0.55, 0)
+        output[outside_roi] = dimmed[outside_roi]
+
     region_contours = [
         np.asarray(detection.region_polygon, dtype=np.int32).reshape(-1, 1, 2)
         for detection in detections
-        if detection.region_polygon is not None
-        and len(detection.region_polygon) >= 3
+        if detection.region_polygon is not None and len(detection.region_polygon) >= 3
     ]
     if region_contours:
         region_mask = np.zeros(output.shape[:2], dtype=np.uint8)
@@ -32,10 +44,6 @@ def render(
         blended = cv2.addWeighted(output, 0.62, region_color, 0.38, 0)
         output[region_mask > 0] = blended[region_mask > 0]
         cv2.drawContours(output, region_contours, -1, (0, 220, 255), 2)
-
-    for truth in ground_truth:
-        x1, y1, x2, y2 = truth.bbox_xyxy
-        cv2.rectangle(output, (x1, y1), (x2, y2), (255, 130, 30), 2)
 
     for detection in detections:
         x1, y1, x2, y2 = detection.bbox_xyxy
@@ -52,13 +60,8 @@ def render(
             cv2.LINE_AA,
         )
 
-    roi_contours = [
-        np.asarray(polygon, dtype=np.int32).reshape(-1, 1, 2)
-        for polygon in roi_polygons
-        if len(polygon) >= 3
-    ]
     if roi_contours:
-        cv2.drawContours(output, roi_contours, -1, (0, 220, 255), 1)
+        cv2.drawContours(output, roi_contours, -1, (0, 220, 255), 3)
 
     title = (
         f"{mode.upper()} | predicted: {len(detections)} | "
@@ -75,7 +78,7 @@ def render(
         2,
         cv2.LINE_AA,
     )
-    legend = "prediction: green | truth: blue"
+    legend = "prediction: green"
     if roi_contours:
         legend += " | ROI: yellow"
     if region_contours:
@@ -85,7 +88,9 @@ def render(
         cv2.FONT_HERSHEY_SIMPLEX,
         0.38,
         1,
-    )[0][0]
+    )[
+        0
+    ][0]
     top = output.shape[0] - 23
     cv2.rectangle(
         output,

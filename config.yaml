@@ -1,5 +1,8 @@
 dataset:
   normalized_size: [640, 480]
+  # Full-width belt region after normalization; also drawn in review frames.
+  evaluation_roi_polygons:
+    - [[0, 115], [640, 115], [640, 380], [0, 380]]
 
 opencv:
   # The belt occupies this vertical range after normalization.
